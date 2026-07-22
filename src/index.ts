@@ -15,10 +15,7 @@ import { stateStore } from "./store/state-store.js";
 const app = express();
 
 const serverUrl =
-  config.urls.remoteUrl.replace(/\/$/, "") ||
-  config.urls.serverUrl.replace(/\/$/, "") ||
-  config.urls.localUrl.replace(/\/$/, "") ||
-  (config.meta.callbackUrl ? config.meta.callbackUrl.replace(/\/webhook(?:\/whatsapp)?\/?$/, "") : `http://localhost:${config.port}`);
+  config.urls.remoteUrl.replace(/\/$/, "")
 
 const swaggerDocument = {
   openapi: "3.0.0",

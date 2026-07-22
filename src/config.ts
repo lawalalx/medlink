@@ -15,8 +15,6 @@ export const config = {
   port: numEnv(process.env.PORT, 3000),
   nodeEnv: process.env.NODE_ENV || "development",
   urls: {
-    localUrl: process.env.LOCAL_URL || "",
-    serverUrl: process.env.SERVER_URL || "",
     remoteUrl: process.env.REMOTE_URL || "",
   },
 
