@@ -6,7 +6,7 @@ This service handles patient WhatsApp messages over Meta webhooks, runs a paymen
 
 - Meta webhook verification endpoint (`hub.challenge` flow)
 - Meta inbound webhook processing (`entry -> changes -> value.messages`)
-- Consent-first flow with interactive Accept/Reject buttons
+- Consent-first flow with interactive Accept/Reject buttons.
 - Coverage/HMO capture and verification hook architecture
 - Beneficiary identity flow (self or another person)
 - Voice note passthrough (no transcription, media URLs forwarded as-is)
