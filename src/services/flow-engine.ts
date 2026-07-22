@@ -5,14 +5,23 @@ import { runTriageAgent } from "../mastra/triage-agent.js";
 import { stateStore } from "../store/state-store.js";
 import type { InboundMessage, IntakePayload, PatientState, TriageStage, UrgencyBand } from "../types.js";
 import { inferUrgencyFromText, classifyConversationIntent } from "./triage-classifier.js";
+import { logger } from "../utils/logger.js";
+
+type ProcessInboundResult = {
+  reply: string;
+  sendConsentTemplate?: boolean;
+  buttonOptions?: Array<{ id: string; title: string }>;
+  choiceOptions?: Array<{ id: string; title: string; description?: string }>;
+};
 
 const YES_SET = new Set(["yes", "y", "accept", "agree", "i consent", "ok", "okay", "consent_accept", "accept consent"]);
 const NO_SET = new Set(["no", "n", "reject", "decline", "consent_reject", "reject consent"]);
-const SELF_SET = new Set(["self", "me", "myself", "1"]);
-const ANOTHER_SET = new Set(["another", "someone else", "child", "my child", "adult", "2", "3"]);
-const MALE_SET = new Set(["male", "m", "man", "boy"]);
-const FEMALE_SET = new Set(["female", "f", "woman", "girl"]);
+const SELF_SET = new Set(["self", "me", "myself", "1", "beneficiary_self"]);
+const ANOTHER_SET = new Set(["another", "someone else", "child", "my child", "adult", "2", "3", "beneficiary_another"]);
+const MALE_SET = new Set(["male", "m", "man", "boy", "sex_male"]);
+const FEMALE_SET = new Set(["female", "f", "woman", "girl", "sex_female"]);
 const NONE_SET = new Set(["none", "no", "nil", "na"]);
+const GREETING_SET = new Set(["hello", "hi", "hey", "good morning", "good afternoon", "good evening"]);
 
 function clean(text: string): string {
   return String(text || "").trim();
@@ -20,6 +29,15 @@ function clean(text: string): string {
 
 function toLower(text: string): string {
   return clean(text).toLowerCase();
+}
+
+function canonicalChoiceToken(text: string): string {
+  const value = toLower(text);
+  if (value === "beneficiary_self") return "self";
+  if (value === "beneficiary_another") return "another";
+  if (value === "sex_male") return "male";
+  if (value === "sex_female") return "female";
+  return value;
 }
 
 function isPhoneLike(text: string): boolean {
@@ -55,6 +73,46 @@ function buildSummaryText(summary: string): string {
   return `Here is a summary of what I captured:\n${value}\n\nReply YES to confirm this summary, or NO to correct it.`;
 }
 
+function parseAiOptionsTag(text: string): {
+  reply: string;
+  options?: Array<{ id: string; title: string; description?: string }>;
+} {
+  const raw = String(text || "");
+  const match = raw.match(/<options>\s*([\s\S]*?)\s*<\/options>/i);
+  if (!match) return { reply: clean(raw) };
+
+  const withoutTag = clean(raw.replace(match[0], " "));
+  try {
+    const parsed = JSON.parse(match[1]);
+    if (!Array.isArray(parsed)) return { reply: withoutTag || clean(raw) };
+
+    const options = parsed
+      .map((item: any, index: number) => {
+        const title = clean(String(item?.title || ""));
+        if (!title) return null;
+
+        const idCandidate = clean(String(item?.id || ""));
+        const id = idCandidate || `opt_${index + 1}`;
+        const description = clean(String(item?.description || ""));
+
+        return {
+          id,
+          title,
+          ...(description ? { description } : {}),
+        };
+      })
+      .filter(Boolean) as Array<{ id: string; title: string; description?: string }>;
+
+    if (!options.length) return { reply: withoutTag || clean(raw) };
+    return {
+      reply: withoutTag || "Please select one option below.",
+      options,
+    };
+  } catch {
+    return { reply: withoutTag || clean(raw) };
+  }
+}
+
 function buildClinicalHistory(state: PatientState): Array<{ role: "system" | "user" | "assistant"; content: string }> {
   const nonClinicalPatterns = [
     /consent/i,
@@ -75,6 +133,10 @@ function buildClinicalHistory(state: PatientState): Array<{ role: "system" | "us
       role: "system",
       content:
         "You are running payment-blind clinical intake. Use only symptom and history content. Ask exactly one follow-up question at a time and never diagnose.",
+    },
+    {
+      role: "system",
+      content: `Known patient demographics: age=${typeof state.subjectAgeYears === "number" ? state.subjectAgeYears : "unknown"}, sex=${state.subjectSex || "unknown"}. If age or sex is unknown, collect only the missing item(s) first, then continue symptom intake.`,
     },
     ...filtered.map((turn) => ({
       role: turn.role === "patient" ? ("user" as const) : ("assistant" as const),
@@ -124,13 +186,29 @@ function buildIntakePayload(
 
 function nextStageAfterCoverage(state: PatientState): TriageStage {
   if (state.beneficiaryMode === "another" && !state.beneficiaryPhone) return "beneficiary_phone";
-  if (state.beneficiaryMode === "another" && state.beneficiaryPhone) return "subject_age";
-  if (state.beneficiaryMode === "self") return "subject_age";
+  if (state.beneficiaryMode === "another" && state.beneficiaryPhone) return "triage";
+  if (state.beneficiaryMode === "self") return "triage";
   return "beneficiary_mode";
 }
 
-export async function processInbound(message: InboundMessage): Promise<{ reply: string; sendConsentTemplate?: boolean }> {
+async function startAiTriageQuestion(state: PatientState, threadId: string): Promise<ProcessInboundResult> {
+  const seededState = stateStore.updatePatient(state.phone, (s) => ({
+    ...s,
+    triageStage: "triage",
+  }));
+
+  const aiResult = await runTriageAgent(buildClinicalHistory(seededState), threadId).catch(() => null);
+  const rawReply = aiResult?.nextMessage || "Thank you. Please describe the main symptoms and when they started.";
+  const parsed = parseAiOptionsTag(rawReply);
+  return {
+    reply: parsed.reply,
+    ...(parsed.options?.length ? { choiceOptions: parsed.options } : {}),
+  };
+}
+
+export async function processInbound(message: InboundMessage): Promise<ProcessInboundResult> {
   const normalizedText = clean(message.text);
+  const allowSimulateFallback = message.source !== "simulate";
 
   stateStore.appendTurn(message.patientPhone, {
     role: "patient",
@@ -142,12 +220,48 @@ export async function processInbound(message: InboundMessage): Promise<{ reply: 
 
   let state = stateStore.getPatient(message.patientPhone);
 
+  const lowerText = canonicalChoiceToken(normalizedText);
+
+  // Recover from stale sessions: greeting should not trap users in old age/sex stages.
+  if (GREETING_SET.has(lowerText) && state.consentStatus === "accepted") {
+    state = stateStore.updatePatient(message.patientPhone, (s) => ({
+      ...s,
+      beneficiaryMode: "unknown",
+      beneficiaryPhone: undefined,
+      coverageType: "unknown",
+      hmoNumber: undefined,
+      hospitalCardNumber: undefined,
+      hmoProvider: undefined,
+      hmoVerification: undefined,
+      subjectAgeYears: undefined,
+      subjectSex: "unknown",
+      triageStage: "beneficiary_mode",
+      triageTurns: 0,
+      triageSummaryDraft: undefined,
+      summaryCorrectionCount: 0,
+    }));
+
+    const reply = "Welcome back. Who is this report for? Reply SELF if for you, or ANOTHER if for someone else.";
+    stateStore.appendTurn(message.patientPhone, { role: "agent", text: reply, timestamp: nowIso() });
+    return {
+      reply,
+      buttonOptions: [
+        { id: "beneficiary_self", title: "SELF" },
+        { id: "beneficiary_another", title: "ANOTHER" },
+      ],
+    };
+  }
+
   if (message.mediaUrls?.length) {
     const hasAudio = (message.mediaContentTypes || []).some((t) => /^audio\//i.test(t));
     if (hasAudio) {
       const payload = buildIntakePayload(state, normalizedText || "Voice note received", "routine", "draft", undefined, message.mediaUrls);
-      const backendRes = await pushIntake(payload);
-      state = stateStore.updatePatient(message.patientPhone, (s) => ({ ...s, lastCaseId: backendRes.caseId || s.lastCaseId }));
+      try {
+        const backendRes = await pushIntake(payload, { allowSimulateFallback });
+        state = stateStore.updatePatient(message.patientPhone, (s) => ({ ...s, lastCaseId: backendRes.caseId || s.lastCaseId }));
+      } catch (error) {
+        logger.error("Failed to submit audio intake", error);
+      }
       const reply = "Voice note received. Thank you. A doctor will review your audio and chat details shortly. Please also share any key symptom details in text if possible.";
       stateStore.appendTurn(message.patientPhone, { role: "agent", text: reply, timestamp: nowIso() });
       return { reply };
@@ -157,11 +271,16 @@ export async function processInbound(message: InboundMessage): Promise<{ reply: 
   const redFlag = detectRedFlag(normalizedText);
   if (redFlag) {
     const payload = buildIntakePayload(state, normalizedText, "emergency", "escalated", redFlag, message.mediaUrls);
-    const backendRes = await pushIntake(payload);
+    let backendRes: { caseId?: string; raw: any } | null = null;
+    try {
+      backendRes = await pushIntake(payload, { allowSimulateFallback });
+    } catch (error) {
+      logger.error("Failed to submit emergency intake", error);
+    }
 
     state = stateStore.updatePatient(message.patientPhone, (s) => ({
       ...s,
-      lastCaseId: backendRes.caseId || s.lastCaseId,
+      lastCaseId: backendRes?.caseId || s.lastCaseId,
       lastUrgencyBand: "emergency",
       triageStage: "done",
     }));
@@ -195,7 +314,13 @@ export async function processInbound(message: InboundMessage): Promise<{ reply: 
       }));
       const acceptReply = "Thank you for consenting. Who is this report for? Reply SELF if for you, or ANOTHER if for someone else.";
       stateStore.appendTurn(message.patientPhone, { role: "agent", text: acceptReply, timestamp: nowIso() });
-      return { reply: acceptReply };
+      return {
+        reply: acceptReply,
+        buttonOptions: [
+          { id: "beneficiary_self", title: "SELF" },
+          { id: "beneficiary_another", title: "ANOTHER" },
+        ],
+      };
     }
 
     return {
@@ -218,7 +343,7 @@ export async function processInbound(message: InboundMessage): Promise<{ reply: 
   });
 
   if (state.beneficiaryMode === "unknown" || state.triageStage === "beneficiary_mode") {
-    const l = toLower(normalizedText);
+    const l = lowerText;
     if (SELF_SET.has(l)) {
       stateStore.updatePatient(message.patientPhone, (s) => ({
         ...s,
@@ -237,7 +362,13 @@ export async function processInbound(message: InboundMessage): Promise<{ reply: 
       return { reply: "Please share the phone number of the patient you are reporting for." };
     }
 
-    return { reply: "Who is this report for? Reply SELF if it is for you, or ANOTHER if it is for someone else." };
+    return {
+      reply: "Who is this report for? Reply SELF if it is for you, or ANOTHER if it is for someone else.",
+      buttonOptions: [
+        { id: "beneficiary_self", title: "SELF" },
+        { id: "beneficiary_another", title: "ANOTHER" },
+      ],
+    };
   }
 
   if (state.triageStage === "beneficiary_phone" && state.beneficiaryMode === "another") {
@@ -268,7 +399,9 @@ export async function processInbound(message: InboundMessage): Promise<{ reply: 
         hospitalCardNumber: undefined,
         triageStage: nextStageAfterCoverage(s),
       }));
-      return { reply: "Thank you. What is the patient's age in years?" };
+      const aiKickoff = await startAiTriageQuestion(state, message.patientPhone);
+      stateStore.appendTurn(message.patientPhone, { role: "agent", text: aiKickoff.reply, timestamp: nowIso() });
+      return aiKickoff;
     }
 
     const isHospitalCard = /^card[:\s-]/i.test(value) || /^hc[:\s-]/i.test(value);
@@ -283,7 +416,10 @@ export async function processInbound(message: InboundMessage): Promise<{ reply: 
         hmoVerification: undefined,
         triageStage: nextStageAfterCoverage(s),
       }));
-      return { reply: "Hospital card captured. What is the patient's age in years?" };
+      const refreshed = stateStore.getPatient(message.patientPhone);
+      const aiKickoff = await startAiTriageQuestion(refreshed, message.patientPhone);
+      stateStore.appendTurn(message.patientPhone, { role: "agent", text: aiKickoff.reply, timestamp: nowIso() });
+      return aiKickoff;
     }
 
     const verify = await verifyHmoNumber(value);
@@ -299,10 +435,24 @@ export async function processInbound(message: InboundMessage): Promise<{ reply: 
 
     if (verify.status === "verified") {
       const hmoName = verify.provider && verify.provider !== "unknown" ? verify.provider.toUpperCase() : "your HMO";
-      return { reply: `HMO details received and verified with ${hmoName}. What is the patient's age in years?` };
+      const refreshed = stateStore.getPatient(message.patientPhone);
+      const aiKickoff = await startAiTriageQuestion(refreshed, message.patientPhone);
+      const reply = `HMO details received and verified with ${hmoName}. ${aiKickoff.reply}`;
+      stateStore.appendTurn(message.patientPhone, { role: "agent", text: reply, timestamp: nowIso() });
+      return {
+        reply,
+        ...(aiKickoff.choiceOptions?.length ? { choiceOptions: aiKickoff.choiceOptions } : {}),
+      };
     }
 
-    return { reply: "HMO details received. We could not auto-verify right now and will continue with manual verification. What is the patient's age in years?" };
+    const refreshed = stateStore.getPatient(message.patientPhone);
+    const aiKickoff = await startAiTriageQuestion(refreshed, message.patientPhone);
+    const reply = `HMO details received. We could not auto-verify right now and will continue with manual verification. ${aiKickoff.reply}`;
+    stateStore.appendTurn(message.patientPhone, { role: "agent", text: reply, timestamp: nowIso() });
+    return {
+      reply,
+      ...(aiKickoff.choiceOptions?.length ? { choiceOptions: aiKickoff.choiceOptions } : {}),
+    };
   }
 
   if (state.triageStage === "subject_age") {
@@ -311,21 +461,32 @@ export async function processInbound(message: InboundMessage): Promise<{ reply: 
       return { reply: "Please provide the patient's age in years, for example 2 or 45." };
     }
 
-    stateStore.updatePatient(message.patientPhone, (s) => ({
+    state = stateStore.updatePatient(message.patientPhone, (s) => ({
       ...s,
       subjectAgeYears: age,
-      triageStage: "subject_sex",
+      triageStage: "triage",
+      triageTurns: 0,
+      triageSummaryDraft: undefined,
+      summaryCorrectionCount: 0,
     }));
-    return { reply: "Thank you. What is the patient's sex? Reply MALE or FEMALE." };
+    const aiKickoff = await startAiTriageQuestion(state, message.patientPhone);
+    stateStore.appendTurn(message.patientPhone, { role: "agent", text: aiKickoff.reply, timestamp: nowIso() });
+    return aiKickoff;
   }
 
   if (state.triageStage === "subject_sex") {
-    const l = toLower(normalizedText);
+    const l = lowerText;
     if (!MALE_SET.has(l) && !FEMALE_SET.has(l)) {
-      return { reply: "Please reply MALE or FEMALE so we can apply the right triage checks." };
+      return {
+        reply: "Please reply MALE or FEMALE so we can apply the right triage checks.",
+        buttonOptions: [
+          { id: "sex_male", title: "MALE" },
+          { id: "sex_female", title: "FEMALE" },
+        ],
+      };
     }
 
-    stateStore.updatePatient(message.patientPhone, (s) => ({
+    state = stateStore.updatePatient(message.patientPhone, (s) => ({
       ...s,
       subjectSex: MALE_SET.has(l) ? "male" : "female",
       triageStage: "triage",
@@ -334,24 +495,33 @@ export async function processInbound(message: InboundMessage): Promise<{ reply: 
       summaryCorrectionCount: 0,
     }));
 
-    return { reply: "Thank you. Please describe the main symptoms and when they started." };
+    const aiKickoff = await startAiTriageQuestion(state, message.patientPhone);
+    stateStore.appendTurn(message.patientPhone, { role: "agent", text: aiKickoff.reply, timestamp: nowIso() });
+    return aiKickoff;
   }
 
   if (state.triageStage === "summary_confirm") {
-    const l = toLower(normalizedText);
+    const l = lowerText;
     if (YES_SET.has(l)) {
       const urgency = state.lastUrgencyBand || "routine";
       const payload = buildIntakePayload(state, normalizedText, urgency, "completed", undefined, message.mediaUrls);
-      const backendRes = await pushIntake(payload);
+      let backendRes: { caseId?: string; raw: any } | null = null;
+      try {
+        backendRes = await pushIntake(payload, { allowSimulateFallback });
+      } catch (error) {
+        logger.error("Failed to submit completed intake", error);
+      }
 
       stateStore.updatePatient(message.patientPhone, (s) => ({
         ...s,
         triageStage: "done",
-        lastCaseId: backendRes.caseId || s.lastCaseId,
+        lastCaseId: backendRes?.caseId || s.lastCaseId,
         lastUrgencyBand: urgency,
       }));
 
-      const confirmedReply = "Thank you. Your report has been sent to a doctor. You will receive the doctor's response in this WhatsApp chat.";
+      const confirmedReply = backendRes
+        ? "Thank you. Your report has been sent to a doctor. You will receive the doctor's response in this WhatsApp chat."
+        : "Thank you. I captured your report, but we could not submit it to the doctor system right now. Please try again shortly.";
       stateStore.appendTurn(message.patientPhone, { role: "agent", text: confirmedReply, timestamp: nowIso() });
       return { reply: confirmedReply };
     }
@@ -392,7 +562,11 @@ export async function processInbound(message: InboundMessage): Promise<{ reply: 
     return { reply: completeReply };
   }
 
-  const followUp = aiResult.nextMessage || "Thank you. Could you tell me more about the symptom severity and when it started?";
-  stateStore.appendTurn(message.patientPhone, { role: "agent", text: followUp, timestamp: nowIso() });
-  return { reply: followUp };
+  const followUpRaw = aiResult.nextMessage || "Thank you. Could you tell me more about the symptom severity and when it started?";
+  const followUp = parseAiOptionsTag(followUpRaw);
+  stateStore.appendTurn(message.patientPhone, { role: "agent", text: followUp.reply, timestamp: nowIso() });
+  return {
+    reply: followUp.reply,
+    ...(followUp.options?.length ? { choiceOptions: followUp.options } : {}),
+  };
 }

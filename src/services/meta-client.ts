@@ -10,6 +10,10 @@ function clampText(text: string, maxLen: number): string {
   return String(text || "").slice(0, maxLen);
 }
 
+function isWhatsAppMessageId(messageId: string | undefined): boolean {
+  return typeof messageId === "string" && messageId.startsWith("wamid.");
+}
+
 function authHeaders(contentType = true): Record<string, string> {
   const headers: Record<string, string> = {
     Authorization: `Bearer ${config.meta.accessToken}`,
@@ -47,6 +51,92 @@ export async function sendText(to: string, body: string): Promise<void> {
     text: {
       preview_url: false,
       body,
+    },
+  });
+}
+
+export async function sendInteractiveButtons(params: {
+  to: string;
+  body: string;
+  buttons: Array<{ id: string; title: string }>;
+  footer?: string;
+}): Promise<void> {
+  const normalizedTo = normalizeWhatsAppPhone(params.to).replace(/^\+/, "");
+  const safeButtons = params.buttons.slice(0, 3).map((button) => ({
+    type: "reply",
+    reply: {
+      id: String(button.id || "").slice(0, 256),
+      title: String(button.title || "").slice(0, 20),
+    },
+  }));
+
+  await postMessages({
+    messaging_product: "whatsapp",
+    to: normalizedTo,
+    type: "interactive",
+    interactive: {
+      type: "button",
+      body: {
+        text: clampText(params.body, 1024),
+      },
+      ...(params.footer
+        ? {
+            footer: {
+              text: clampText(params.footer, 60),
+            },
+          }
+        : {}),
+      action: {
+        buttons: safeButtons,
+      },
+    },
+  });
+}
+
+export async function sendInteractiveList(params: {
+  to: string;
+  body: string;
+  buttonText?: string;
+  sectionTitle?: string;
+  options: Array<{ id: string; title: string; description?: string }>;
+  footer?: string;
+}): Promise<void> {
+  const normalizedTo = normalizeWhatsAppPhone(params.to).replace(/^\+/, "");
+  const rows = params.options.slice(0, 10).map((option, index) => ({
+    id: String(option.id || `opt_${index + 1}`).slice(0, 200),
+    title: clampText(String(option.title || ""), 24),
+    ...(option.description
+      ? {
+          description: clampText(String(option.description), 72),
+        }
+      : {}),
+  }));
+
+  await postMessages({
+    messaging_product: "whatsapp",
+    to: normalizedTo,
+    type: "interactive",
+    interactive: {
+      type: "list",
+      body: {
+        text: clampText(params.body, 1024),
+      },
+      ...(params.footer
+        ? {
+            footer: {
+              text: clampText(params.footer, 60),
+            },
+          }
+        : {}),
+      action: {
+        button: clampText(params.buttonText || "Choose option", 20),
+        sections: [
+          {
+            title: clampText(params.sectionTitle || "Options", 24),
+            rows,
+          },
+        ],
+      },
     },
   });
 }
@@ -98,6 +188,50 @@ export async function sendConsentPrompt(to: string): Promise<void> {
       normalizedTo,
       "Before we continue, please provide consent for NDPA-compliant triage processing. Reply YES to accept or NO to decline."
     );
+  }
+}
+
+export async function sendTypingIndicator(params: {
+  to: string;
+  messageId: string;
+  phoneNumberId?: string;
+}): Promise<boolean> {
+  try {
+    const { to, messageId, phoneNumberId } = params;
+    if (!isWhatsAppMessageId(messageId)) {
+      logger.warn("Skipping typing indicator for non-WhatsApp message id", { messageId });
+      return false;
+    }
+
+    const resolvedPhoneNumberId = phoneNumberId || config.meta.phoneNumberId;
+    if (!resolvedPhoneNumberId) {
+      logger.warn("Cannot send typing indicator: missing phone number id");
+      return false;
+    }
+
+    const url = `${graphBaseUrl()}/${resolvedPhoneNumberId}/messages`;
+    const res = await fetch(url, {
+      method: "POST",
+      headers: authHeaders(true),
+      body: JSON.stringify({
+        messaging_product: "whatsapp",
+        status: "read",
+        message_id: messageId,
+        typing_indicator: { type: "text" },
+      }),
+    });
+
+    if (res.ok) {
+      logger.info(`Typing indicator sent to ${to}`);
+      return true;
+    }
+
+    const data = await res.json().catch(() => ({}));
+    logger.warn("Typing indicator failed", { status: res.status, data });
+    return false;
+  } catch (error) {
+    logger.warn("Typing indicator crashed", error);
+    return false;
   }
 }
 

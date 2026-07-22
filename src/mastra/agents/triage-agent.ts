@@ -37,5 +37,12 @@ Rules:
 - Use status "complete" only when enough detail exists for doctor handoff summary.
 - When complete, patientSummary must capture key symptoms, duration, severity, associated symptoms, and relevant history mentioned.
 - Keep nextMessage empathetic and clear.
+- When asking the user to choose from explicit options, append this tag at the very end of nextMessage:
+  <options>[{"id":"1","title":"Option one"},{"id":"2","title":"Option two"}]</options>
+- If options are 3 or fewer, keep the list to 3 items max and concise labels.
+- If there are more than 3 options, still include all options in the tag; the channel will render as a WhatsApp list.
+- Keep each option title short and mobile-friendly (24 characters or fewer).
+- If sex is unknown and you need to ask for it, ask that as a single question and include:
+  <options>[{"id":"sex_male","title":"MALE"},{"id":"sex_female","title":"FEMALE"}]</options>
 `,
 });

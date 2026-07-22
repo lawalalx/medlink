@@ -327,11 +327,11 @@
     "+2349038433047": {
       "phone": "+2349038433047",
       "consentStatus": "accepted",
-      "coverageType": "unknown",
-      "beneficiaryMode": "unknown",
-      "subjectSex": "unknown",
-      "triageStage": "beneficiary_mode",
-      "triageTurns": 0,
+      "coverageType": "hmo",
+      "beneficiaryMode": "self",
+      "subjectSex": "male",
+      "triageStage": "triage",
+      "triageTurns": 3,
       "history": [
         {
           "role": "patient",
@@ -351,11 +351,712 @@
           "role": "agent",
           "text": "Thank you for consenting. Who is this report for? Reply SELF if for you, or ANOTHER if for someone else.",
           "timestamp": "2026-07-22T20:25:21.412Z"
+        },
+        {
+          "role": "patient",
+          "text": "Self",
+          "timestamp": "2026-07-22T22:29:35.484Z",
+          "mediaUrls": [],
+          "messageType": "text"
+        },
+        {
+          "role": "patient",
+          "text": "26264907/0",
+          "timestamp": "2026-07-22T22:33:34.674Z",
+          "mediaUrls": [],
+          "messageType": "text"
+        },
+        {
+          "role": "patient",
+          "text": "20",
+          "timestamp": "2026-07-22T22:34:58.801Z",
+          "mediaUrls": [],
+          "messageType": "text"
+        },
+        {
+          "role": "patient",
+          "text": "Male",
+          "timestamp": "2026-07-22T22:35:06.349Z",
+          "mediaUrls": [],
+          "messageType": "text"
+        },
+        {
+          "role": "patient",
+          "text": "I am.feeling headache",
+          "timestamp": "2026-07-22T22:35:20.290Z",
+          "mediaUrls": [],
+          "messageType": "text"
+        },
+        {
+          "role": "agent",
+          "text": "Thank you. Could you tell me when this started and how severe it feels now?",
+          "timestamp": "2026-07-22T22:35:21.699Z"
+        },
+        {
+          "role": "patient",
+          "text": "12th March 2026",
+          "timestamp": "2026-07-22T22:36:02.629Z",
+          "mediaUrls": [],
+          "messageType": "text"
+        },
+        {
+          "role": "agent",
+          "text": "Thank you. Could you tell me when this started and how severe it feels now?",
+          "timestamp": "2026-07-22T22:36:03.725Z"
+        },
+        {
+          "role": "patient",
+          "text": "Yesterday",
+          "timestamp": "2026-07-22T22:36:17.745Z",
+          "mediaUrls": [],
+          "messageType": "text"
+        },
+        {
+          "role": "agent",
+          "text": "Thank you. Could you tell me when this started and how severe it feels now?",
+          "timestamp": "2026-07-22T22:36:19.010Z"
         }
       ],
       "createdAt": "2026-07-22T20:18:48.078Z",
-      "updatedAt": "2026-07-22T20:25:21.413Z",
-      "consentUpdatedAt": "2026-07-22T20:25:21.410Z"
+      "updatedAt": "2026-07-22T22:36:19.010Z",
+      "consentUpdatedAt": "2026-07-22T20:25:21.410Z",
+      "hmoNumber": "26264907/0",
+      "hmoProvider": "unknown",
+      "hmoVerification": {
+        "provider": "unknown",
+        "hmoNumber": "26264907/0",
+        "verified": false,
+        "verificationMode": "manual",
+        "status": "manual_verification_required"
+      },
+      "subjectAgeYears": 20,
+      "summaryCorrectionCount": 0
+    },
+    "+2349013360717": {
+      "phone": "+2349013360717",
+      "consentStatus": "accepted",
+      "coverageType": "hmo",
+      "beneficiaryMode": "self",
+      "subjectSex": "unknown",
+      "triageStage": "summary_confirm",
+      "triageTurns": 6,
+      "history": [
+        {
+          "role": "patient",
+          "text": "okay",
+          "timestamp": "2026-07-22T23:10:49.826Z",
+          "messageType": "text"
+        },
+        {
+          "role": "patient",
+          "text": "okay",
+          "timestamp": "2026-07-22T23:10:49.871Z",
+          "messageType": "text"
+        },
+        {
+          "role": "patient",
+          "text": "okay",
+          "timestamp": "2026-07-22T23:10:49.920Z",
+          "messageType": "text"
+        },
+        {
+          "role": "patient",
+          "text": "okay",
+          "timestamp": "2026-07-22T23:10:49.962Z",
+          "messageType": "text"
+        },
+        {
+          "role": "patient",
+          "text": "okay",
+          "timestamp": "2026-07-22T23:10:50.040Z",
+          "messageType": "text"
+        },
+        {
+          "role": "patient",
+          "text": "okay",
+          "timestamp": "2026-07-22T23:10:50.130Z",
+          "messageType": "text"
+        },
+        {
+          "role": "patient",
+          "text": "okay",
+          "timestamp": "2026-07-22T23:10:50.226Z",
+          "messageType": "text"
+        },
+        {
+          "role": "patient",
+          "text": "okay",
+          "timestamp": "2026-07-22T23:10:50.273Z",
+          "messageType": "text"
+        },
+        {
+          "role": "patient",
+          "text": "okay",
+          "timestamp": "2026-07-22T23:10:50.370Z",
+          "messageType": "text"
+        },
+        {
+          "role": "patient",
+          "text": "okay",
+          "timestamp": "2026-07-22T23:10:50.416Z",
+          "messageType": "text"
+        },
+        {
+          "role": "patient",
+          "text": "okay",
+          "timestamp": "2026-07-22T23:10:50.488Z",
+          "messageType": "text"
+        },
+        {
+          "role": "patient",
+          "text": "okay",
+          "timestamp": "2026-07-22T23:10:50.570Z",
+          "messageType": "text"
+        },
+        {
+          "role": "patient",
+          "text": "okay",
+          "timestamp": "2026-07-22T23:10:50.606Z",
+          "messageType": "text"
+        },
+        {
+          "role": "patient",
+          "text": "okay",
+          "timestamp": "2026-07-22T23:10:50.770Z",
+          "messageType": "text"
+        },
+        {
+          "role": "patient",
+          "text": "okay",
+          "timestamp": "2026-07-22T23:10:50.790Z",
+          "messageType": "text"
+        },
+        {
+          "role": "patient",
+          "text": "okay",
+          "timestamp": "2026-07-22T23:10:50.883Z",
+          "messageType": "text"
+        },
+        {
+          "role": "patient",
+          "text": "okay",
+          "timestamp": "2026-07-22T23:10:50.963Z",
+          "messageType": "text"
+        },
+        {
+          "role": "patient",
+          "text": "okay",
+          "timestamp": "2026-07-22T23:10:51.062Z",
+          "messageType": "text"
+        },
+        {
+          "role": "patient",
+          "text": "okay",
+          "timestamp": "2026-07-22T23:10:51.116Z",
+          "messageType": "text"
+        },
+        {
+          "role": "patient",
+          "text": "okay",
+          "timestamp": "2026-07-22T23:10:51.200Z",
+          "messageType": "text"
+        },
+        {
+          "role": "patient",
+          "text": "okay",
+          "timestamp": "2026-07-22T23:10:51.283Z",
+          "messageType": "text"
+        },
+        {
+          "role": "patient",
+          "text": "okay",
+          "timestamp": "2026-07-22T23:10:51.322Z",
+          "messageType": "text"
+        },
+        {
+          "role": "patient",
+          "text": "okay",
+          "timestamp": "2026-07-22T23:10:51.355Z",
+          "messageType": "text"
+        },
+        {
+          "role": "patient",
+          "text": "okay",
+          "timestamp": "2026-07-22T23:10:51.427Z",
+          "messageType": "text"
+        },
+        {
+          "role": "patient",
+          "text": "okay",
+          "timestamp": "2026-07-22T23:10:51.490Z",
+          "messageType": "text"
+        },
+        {
+          "role": "patient",
+          "text": "okay",
+          "timestamp": "2026-07-22T23:10:51.547Z",
+          "messageType": "text"
+        },
+        {
+          "role": "patient",
+          "text": "okay",
+          "timestamp": "2026-07-22T23:10:51.609Z",
+          "messageType": "text"
+        },
+        {
+          "role": "patient",
+          "text": "okay",
+          "timestamp": "2026-07-22T23:10:51.645Z",
+          "messageType": "text"
+        },
+        {
+          "role": "patient",
+          "text": "okay",
+          "timestamp": "2026-07-22T23:10:51.686Z",
+          "messageType": "text"
+        },
+        {
+          "role": "patient",
+          "text": "okay",
+          "timestamp": "2026-07-22T23:10:51.763Z",
+          "messageType": "text"
+        },
+        {
+          "role": "patient",
+          "text": "okay",
+          "timestamp": "2026-07-22T23:10:51.826Z",
+          "messageType": "text"
+        },
+        {
+          "role": "patient",
+          "text": "okay",
+          "timestamp": "2026-07-22T23:10:51.860Z",
+          "messageType": "text"
+        },
+        {
+          "role": "patient",
+          "text": "okay",
+          "timestamp": "2026-07-22T23:10:51.890Z",
+          "messageType": "text"
+        },
+        {
+          "role": "patient",
+          "text": "okay",
+          "timestamp": "2026-07-22T23:10:51.949Z",
+          "messageType": "text"
+        },
+        {
+          "role": "patient",
+          "text": "okay",
+          "timestamp": "2026-07-22T23:10:52.007Z",
+          "messageType": "text"
+        },
+        {
+          "role": "patient",
+          "text": "okay",
+          "timestamp": "2026-07-22T23:10:52.068Z",
+          "messageType": "text"
+        },
+        {
+          "role": "patient",
+          "text": "okay",
+          "timestamp": "2026-07-22T23:10:52.137Z",
+          "messageType": "text"
+        },
+        {
+          "role": "patient",
+          "text": "okay",
+          "timestamp": "2026-07-22T23:10:52.196Z",
+          "messageType": "text"
+        },
+        {
+          "role": "patient",
+          "text": "okay",
+          "timestamp": "2026-07-22T23:10:52.284Z",
+          "messageType": "text"
+        },
+        {
+          "role": "patient",
+          "text": "okay",
+          "timestamp": "2026-07-22T23:10:52.341Z",
+          "messageType": "text"
+        },
+        {
+          "role": "patient",
+          "text": "okay",
+          "timestamp": "2026-07-22T23:10:52.398Z",
+          "messageType": "text"
+        },
+        {
+          "role": "patient",
+          "text": "okay",
+          "timestamp": "2026-07-22T23:10:52.455Z",
+          "messageType": "text"
+        },
+        {
+          "role": "patient",
+          "text": "okay",
+          "timestamp": "2026-07-22T23:10:52.509Z",
+          "messageType": "text"
+        },
+        {
+          "role": "patient",
+          "text": "okay",
+          "timestamp": "2026-07-22T23:10:52.580Z",
+          "messageType": "text"
+        },
+        {
+          "role": "patient",
+          "text": "okay",
+          "timestamp": "2026-07-22T23:10:52.619Z",
+          "messageType": "text"
+        },
+        {
+          "role": "patient",
+          "text": "okay",
+          "timestamp": "2026-07-22T23:10:52.659Z",
+          "messageType": "text"
+        },
+        {
+          "role": "patient",
+          "text": "okay",
+          "timestamp": "2026-07-22T23:10:52.688Z",
+          "messageType": "text"
+        },
+        {
+          "role": "patient",
+          "text": "okay",
+          "timestamp": "2026-07-22T23:10:52.769Z",
+          "messageType": "text"
+        },
+        {
+          "role": "patient",
+          "text": "okay",
+          "timestamp": "2026-07-22T23:10:52.848Z",
+          "messageType": "text"
+        },
+        {
+          "role": "patient",
+          "text": "okay",
+          "timestamp": "2026-07-22T23:10:52.919Z",
+          "messageType": "text"
+        },
+        {
+          "role": "patient",
+          "text": "okay",
+          "timestamp": "2026-07-22T23:10:52.993Z",
+          "messageType": "text"
+        },
+        {
+          "role": "patient",
+          "text": "okay",
+          "timestamp": "2026-07-22T23:10:53.067Z",
+          "messageType": "text"
+        },
+        {
+          "role": "patient",
+          "text": "okay",
+          "timestamp": "2026-07-22T23:10:53.133Z",
+          "messageType": "text"
+        },
+        {
+          "role": "patient",
+          "text": "okay",
+          "timestamp": "2026-07-22T23:10:53.194Z",
+          "messageType": "text"
+        },
+        {
+          "role": "patient",
+          "text": "okay",
+          "timestamp": "2026-07-22T23:10:53.228Z",
+          "messageType": "text"
+        },
+        {
+          "role": "patient",
+          "text": "okay",
+          "timestamp": "2026-07-22T23:10:53.280Z",
+          "messageType": "text"
+        },
+        {
+          "role": "patient",
+          "text": "okay",
+          "timestamp": "2026-07-22T23:10:53.340Z",
+          "messageType": "text"
+        },
+        {
+          "role": "patient",
+          "text": "okay",
+          "timestamp": "2026-07-22T23:10:53.408Z",
+          "messageType": "text"
+        },
+        {
+          "role": "patient",
+          "text": "okay",
+          "timestamp": "2026-07-22T23:10:53.440Z",
+          "messageType": "text"
+        },
+        {
+          "role": "patient",
+          "text": "okay",
+          "timestamp": "2026-07-22T23:10:53.478Z",
+          "messageType": "text"
+        },
+        {
+          "role": "patient",
+          "text": "okay",
+          "timestamp": "2026-07-22T23:10:53.507Z",
+          "messageType": "text"
+        },
+        {
+          "role": "patient",
+          "text": "okay",
+          "timestamp": "2026-07-22T23:10:53.541Z",
+          "messageType": "text"
+        },
+        {
+          "role": "patient",
+          "text": "okay",
+          "timestamp": "2026-07-22T23:10:53.612Z",
+          "messageType": "text"
+        },
+        {
+          "role": "patient",
+          "text": "okay",
+          "timestamp": "2026-07-22T23:10:53.673Z",
+          "messageType": "text"
+        },
+        {
+          "role": "patient",
+          "text": "okay",
+          "timestamp": "2026-07-22T23:10:53.747Z",
+          "messageType": "text"
+        },
+        {
+          "role": "patient",
+          "text": "okay",
+          "timestamp": "2026-07-22T23:10:53.828Z",
+          "messageType": "text"
+        },
+        {
+          "role": "patient",
+          "text": "okay",
+          "timestamp": "2026-07-22T23:10:53.915Z",
+          "messageType": "text"
+        },
+        {
+          "role": "patient",
+          "text": "okay",
+          "timestamp": "2026-07-22T23:10:53.984Z",
+          "messageType": "text"
+        },
+        {
+          "role": "patient",
+          "text": "okay",
+          "timestamp": "2026-07-22T23:10:54.052Z",
+          "messageType": "text"
+        },
+        {
+          "role": "patient",
+          "text": "okay",
+          "timestamp": "2026-07-22T23:10:54.174Z",
+          "messageType": "text"
+        },
+        {
+          "role": "patient",
+          "text": "okay",
+          "timestamp": "2026-07-22T23:10:54.253Z",
+          "messageType": "text"
+        },
+        {
+          "role": "patient",
+          "text": "okay",
+          "timestamp": "2026-07-22T23:10:54.376Z",
+          "messageType": "text"
+        },
+        {
+          "role": "patient",
+          "text": "okay",
+          "timestamp": "2026-07-22T23:10:54.438Z",
+          "messageType": "text"
+        },
+        {
+          "role": "patient",
+          "text": "okay",
+          "timestamp": "2026-07-22T23:10:54.455Z",
+          "messageType": "text"
+        },
+        {
+          "role": "patient",
+          "text": "okay",
+          "timestamp": "2026-07-22T23:10:54.565Z",
+          "messageType": "text"
+        },
+        {
+          "role": "patient",
+          "text": "okay",
+          "timestamp": "2026-07-22T23:10:54.604Z",
+          "messageType": "text"
+        },
+        {
+          "role": "patient",
+          "text": "okay",
+          "timestamp": "2026-07-22T23:10:54.716Z",
+          "messageType": "text"
+        },
+        {
+          "role": "patient",
+          "text": "okay",
+          "timestamp": "2026-07-22T23:10:54.766Z",
+          "messageType": "text"
+        },
+        {
+          "role": "patient",
+          "text": "okay",
+          "timestamp": "2026-07-22T23:10:54.835Z",
+          "messageType": "text"
+        },
+        {
+          "role": "patient",
+          "text": "okay",
+          "timestamp": "2026-07-22T23:10:54.886Z",
+          "messageType": "text"
+        },
+        {
+          "role": "patient",
+          "text": "okay",
+          "timestamp": "2026-07-22T23:10:54.943Z",
+          "messageType": "text"
+        },
+        {
+          "role": "patient",
+          "text": "okay",
+          "timestamp": "2026-07-22T23:10:54.995Z",
+          "messageType": "text"
+        },
+        {
+          "role": "patient",
+          "text": "okay",
+          "timestamp": "2026-07-22T23:10:55.053Z",
+          "messageType": "text"
+        },
+        {
+          "role": "patient",
+          "text": "okay",
+          "timestamp": "2026-07-22T23:10:55.139Z",
+          "messageType": "text"
+        },
+        {
+          "role": "patient",
+          "text": "okay",
+          "timestamp": "2026-07-22T23:10:55.176Z",
+          "messageType": "text"
+        },
+        {
+          "role": "patient",
+          "text": "okay",
+          "timestamp": "2026-07-22T23:10:55.224Z",
+          "messageType": "text"
+        },
+        {
+          "role": "patient",
+          "text": "okay",
+          "timestamp": "2026-07-22T23:10:55.302Z",
+          "messageType": "text"
+        },
+        {
+          "role": "patient",
+          "text": "okay",
+          "timestamp": "2026-07-22T23:10:55.376Z",
+          "messageType": "text"
+        },
+        {
+          "role": "patient",
+          "text": "okay",
+          "timestamp": "2026-07-22T23:10:55.441Z",
+          "messageType": "text"
+        },
+        {
+          "role": "patient",
+          "text": "okay",
+          "timestamp": "2026-07-22T23:10:55.495Z",
+          "messageType": "text"
+        },
+        {
+          "role": "patient",
+          "text": "okay",
+          "timestamp": "2026-07-22T23:10:55.552Z",
+          "messageType": "text"
+        },
+        {
+          "role": "patient",
+          "text": "okay",
+          "timestamp": "2026-07-22T23:10:55.606Z",
+          "messageType": "text"
+        },
+        {
+          "role": "patient",
+          "text": "okay",
+          "timestamp": "2026-07-22T23:10:55.677Z",
+          "messageType": "text"
+        },
+        {
+          "role": "patient",
+          "text": "okay",
+          "timestamp": "2026-07-22T23:10:55.743Z",
+          "messageType": "text"
+        },
+        {
+          "role": "patient",
+          "text": "okay",
+          "timestamp": "2026-07-22T23:10:55.814Z",
+          "messageType": "text"
+        },
+        {
+          "role": "patient",
+          "text": "okay",
+          "timestamp": "2026-07-22T23:10:55.895Z",
+          "messageType": "text"
+        },
+        {
+          "role": "patient",
+          "text": "okay",
+          "timestamp": "2026-07-22T23:10:55.996Z",
+          "messageType": "text"
+        },
+        {
+          "role": "patient",
+          "text": "okay",
+          "timestamp": "2026-07-22T23:10:56.028Z",
+          "messageType": "text"
+        },
+        {
+          "role": "patient",
+          "text": "okay",
+          "timestamp": "2026-07-22T23:10:56.070Z",
+          "messageType": "text"
+        },
+        {
+          "role": "patient",
+          "text": "okay",
+          "timestamp": "2026-07-22T23:10:56.149Z",
+          "messageType": "text"
+        }
+      ],
+      "createdAt": "2026-07-22T22:39:04.186Z",
+      "updatedAt": "2026-07-22T23:10:56.213Z",
+      "consentUpdatedAt": "2026-07-22T22:39:42.973Z",
+      "summaryCorrectionCount": 0,
+      "hmoNumber": "26264907",
+      "hmoProvider": "unknown",
+      "hmoVerification": {
+        "provider": "unknown",
+        "hmoNumber": "26264907",
+        "verified": false,
+        "verificationMode": "manual",
+        "status": "manual_verification_required"
+      },
+      "triageSummaryDraft": "",
+      "lastUrgencyBand": "routine"
     }
   }
 }

@@ -1,4 +1,5 @@
 import { mastra } from "./index.js";
+import { logger } from "../utils/logger.js";
 
 export type AgentTriageOutput = {
   status: "continue" | "complete";
@@ -8,13 +9,32 @@ export type AgentTriageOutput = {
 };
 
 function safeParse(text: string): AgentTriageOutput | null {
-  try {
-    const parsed = JSON.parse(text) as AgentTriageOutput;
-    if (!parsed?.status || !parsed?.nextMessage) return null;
-    return parsed;
-  } catch {
-    return null;
+  const normalizeCandidate = (candidate: string): AgentTriageOutput | null => {
+    try {
+      const parsed = JSON.parse(candidate) as AgentTriageOutput;
+      if (!parsed?.status || !parsed?.nextMessage) return null;
+      return parsed;
+    } catch {
+      return null;
+    }
+  };
+
+  const direct = normalizeCandidate(text);
+  if (direct) return direct;
+
+  const fenced = text.match(/```(?:json)?\s*([\s\S]*?)\s*```/i);
+  if (fenced?.[1]) {
+    const fromFence = normalizeCandidate(fenced[1].trim());
+    if (fromFence) return fromFence;
   }
+
+  const objectMatch = text.match(/\{[\s\S]*\}/);
+  if (objectMatch?.[0]) {
+    const fromObject = normalizeCandidate(objectMatch[0].trim());
+    if (fromObject) return fromObject;
+  }
+
+  return null;
 }
 
 export async function runTriageAgent(
@@ -32,6 +52,20 @@ export async function runTriageAgent(
 
   const parsed = safeParse(rawText);
   if (parsed) return parsed;
+
+  if (rawText) {
+    logger.warn("Triage agent returned non-JSON output; using raw text fallback", {
+      threadId,
+      preview: rawText.slice(0, 300),
+    });
+
+    return {
+      status: "continue",
+      nextMessage: rawText,
+      patientSummary: "",
+      suggestedUrgencyBand: "routine",
+    };
+  }
 
   return {
     status: "continue",

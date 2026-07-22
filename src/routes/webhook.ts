@@ -1,9 +1,20 @@
 import type { Request, Response } from "express";
 import { processInbound } from "../services/flow-engine.js";
-import { sendConsentPrompt, sendText, fetchMediaUrl } from "../services/meta-client.js";
+import { sendConsentPrompt, sendText, fetchMediaUrl, sendTypingIndicator, sendInteractiveButtons, sendInteractiveList } from "../services/meta-client.js";
 import { normalizeWhatsAppPhone } from "../utils/phone.js";
 import { logger } from "../utils/logger.js";
 import { config } from "../config.js";
+
+const processedInboundMessageIds = new Map<string, number>();
+const INBOUND_DEDUPE_TTL_MS = 5 * 60 * 1000;
+
+function cleanupProcessedIds(nowMs: number): void {
+  for (const [messageId, ts] of processedInboundMessageIds.entries()) {
+    if (nowMs - ts > INBOUND_DEDUPE_TTL_MS) {
+      processedInboundMessageIds.delete(messageId);
+    }
+  }
+}
 
 export function verifyMetaWebhook(req: Request, res: Response): void {
   const mode = String(req.query["hub.mode"] || "");
@@ -29,7 +40,7 @@ function pickInboundText(message: any): string {
     (typeof message?.interactive?.list_reply?.id === "string" && message.interactive.list_reply.id) ||
     "";
 
-  return String(text || interactiveId || interactiveTitle || "").trim();
+  return String(text || interactiveTitle || interactiveId || "").trim();
 }
 
 export async function metaWebhookHandler(req: Request, res: Response): Promise<void> {
@@ -41,6 +52,7 @@ export async function metaWebhookHandler(req: Request, res: Response): Promise<v
       for (const change of changes) {
         const value = change?.value || {};
         const messages = Array.isArray(value?.messages) ? value.messages : [];
+        const phoneNumberId = String(value?.metadata?.phone_number_id || "");
 
         for (const message of messages) {
           const from = normalizeWhatsAppPhone(String(message?.from || ""));
@@ -48,6 +60,16 @@ export async function metaWebhookHandler(req: Request, res: Response): Promise<v
 
           const body = pickInboundText(message);
           const messageId = String(message?.id || "");
+          if (messageId) {
+            const nowMs = Date.now();
+            cleanupProcessedIds(nowMs);
+            if (processedInboundMessageIds.has(messageId)) {
+              logger.info("Skipping duplicate inbound WhatsApp message", { messageId, from });
+              continue;
+            }
+            processedInboundMessageIds.set(messageId, nowMs);
+          }
+
           const mediaUrls: string[] = [];
           const mediaTypes: string[] = [];
 
@@ -69,19 +91,68 @@ export async function metaWebhookHandler(req: Request, res: Response): Promise<v
             mediaTypes.push("document");
           }
 
-          const result = await processInbound({
-            patientPhone: from,
-            text: body,
-            messageSid: messageId,
-            mediaUrls,
-            mediaContentTypes: mediaTypes,
-            source: "meta_webhook",
-          });
+          let intervalId: ReturnType<typeof setInterval> | undefined;
+          try {
+            // Initial typing ping + keep-alive while triage processing runs.
+            if (messageId) {
+              await sendTypingIndicator({
+                to: from,
+                messageId,
+                phoneNumberId: phoneNumberId || undefined,
+              }).catch(() => false);
 
-          if (result.sendConsentTemplate) {
-            await sendConsentPrompt(from);
-          } else {
-            await sendText(from, result.reply);
+              intervalId = setInterval(() => {
+                void sendTypingIndicator({
+                  to: from,
+                  messageId,
+                  phoneNumberId: phoneNumberId || undefined,
+                }).catch(() => false);
+              }, 8000);
+            }
+
+            const result = await processInbound({
+              patientPhone: from,
+              text: body,
+              messageSid: messageId,
+              mediaUrls,
+              mediaContentTypes: mediaTypes,
+              source: "meta_webhook",
+            });
+
+            if (result.sendConsentTemplate) {
+              await sendConsentPrompt(from);
+            } else if (result.buttonOptions?.length) {
+              await sendInteractiveButtons({
+                to: from,
+                body: result.reply,
+                buttons: result.buttonOptions,
+              });
+            } else if (result.choiceOptions?.length) {
+              if (result.choiceOptions.length <= 3) {
+                await sendInteractiveButtons({
+                  to: from,
+                  body: result.reply,
+                  buttons: result.choiceOptions.map((option) => ({
+                    id: option.id,
+                    title: option.title,
+                  })),
+                });
+              } else {
+                await sendInteractiveList({
+                  to: from,
+                  body: result.reply,
+                  options: result.choiceOptions,
+                  buttonText: "Select",
+                  sectionTitle: "Available options",
+                });
+              }
+            } else {
+              await sendText(from, result.reply);
+            }
+          } finally {
+            if (intervalId) {
+              clearInterval(intervalId);
+            }
           }
         }
       }
