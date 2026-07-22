@@ -1,0 +1,361 @@
+{
+  "patients": {
+    "+2348099991111": {
+      "phone": "+2348099991111",
+      "consentStatus": "accepted",
+      "coverageType": "none",
+      "beneficiaryMode": "self",
+      "subjectSex": "female",
+      "triageStage": "triage",
+      "triageTurns": 1,
+      "history": [
+        {
+          "role": "patient",
+          "text": "hello",
+          "timestamp": "2026-07-22T19:36:20.339Z",
+          "messageType": "text"
+        },
+        {
+          "role": "patient",
+          "text": "yes",
+          "timestamp": "2026-07-22T19:36:20.373Z",
+          "messageType": "text"
+        },
+        {
+          "role": "agent",
+          "text": "Thank you for consenting. Who is this report for? Reply SELF if for you, or ANOTHER if for someone else.",
+          "timestamp": "2026-07-22T19:36:20.436Z"
+        },
+        {
+          "role": "patient",
+          "text": "self",
+          "timestamp": "2026-07-22T19:36:20.439Z",
+          "messageType": "text"
+        },
+        {
+          "role": "patient",
+          "text": "none",
+          "timestamp": "2026-07-22T19:36:20.486Z",
+          "messageType": "text"
+        },
+        {
+          "role": "patient",
+          "text": "34",
+          "timestamp": "2026-07-22T19:36:20.529Z",
+          "messageType": "text"
+        },
+        {
+          "role": "patient",
+          "text": "female",
+          "timestamp": "2026-07-22T19:36:20.566Z",
+          "messageType": "text"
+        },
+        {
+          "role": "patient",
+          "text": "I have had headache and fever since yesterday",
+          "timestamp": "2026-07-22T19:36:20.606Z",
+          "messageType": "text"
+        },
+        {
+          "role": "patient",
+          "text": "It is moderate and I also feel weak",
+          "timestamp": "2026-07-22T19:36:20.690Z",
+          "messageType": "text"
+        },
+        {
+          "role": "patient",
+          "text": "no",
+          "timestamp": "2026-07-22T19:36:20.796Z",
+          "messageType": "text"
+        },
+        {
+          "role": "patient",
+          "text": "Headache and fever started yesterday with weakness and no chest pain.",
+          "timestamp": "2026-07-22T19:36:20.837Z",
+          "messageType": "text"
+        },
+        {
+          "role": "patient",
+          "text": "yes",
+          "timestamp": "2026-07-22T19:36:20.841Z",
+          "messageType": "text"
+        },
+        {
+          "role": "patient",
+          "text": "hello",
+          "timestamp": "2026-07-22T19:37:18.256Z",
+          "messageType": "text"
+        },
+        {
+          "role": "patient",
+          "text": "yes",
+          "timestamp": "2026-07-22T19:37:18.306Z",
+          "messageType": "text"
+        },
+        {
+          "role": "patient",
+          "text": "self",
+          "timestamp": "2026-07-22T19:37:18.355Z",
+          "messageType": "text"
+        },
+        {
+          "role": "patient",
+          "text": "none",
+          "timestamp": "2026-07-22T19:37:18.413Z",
+          "messageType": "text"
+        },
+        {
+          "role": "patient",
+          "text": "34",
+          "timestamp": "2026-07-22T19:37:18.447Z",
+          "messageType": "text"
+        },
+        {
+          "role": "patient",
+          "text": "female",
+          "timestamp": "2026-07-22T19:37:18.525Z",
+          "messageType": "text"
+        },
+        {
+          "role": "patient",
+          "text": "I have had headache and fever since yesterday",
+          "timestamp": "2026-07-22T19:37:18.595Z",
+          "messageType": "text"
+        }
+      ],
+      "createdAt": "2026-07-22T19:36:20.340Z",
+      "updatedAt": "2026-07-22T19:37:18.627Z",
+      "consentUpdatedAt": "2026-07-22T19:36:20.405Z",
+      "subjectAgeYears": 34,
+      "summaryCorrectionCount": 0
+    },
+    "+2348100001001": {
+      "phone": "+2348100001001",
+      "consentStatus": "accepted",
+      "coverageType": "hmo",
+      "beneficiaryMode": "another",
+      "subjectSex": "male",
+      "triageStage": "triage",
+      "triageTurns": 0,
+      "history": [
+        {
+          "role": "patient",
+          "text": "hello",
+          "timestamp": "2026-07-22T19:38:11.923Z",
+          "messageType": "text"
+        },
+        {
+          "role": "patient",
+          "text": "yes",
+          "timestamp": "2026-07-22T19:38:11.937Z",
+          "messageType": "text"
+        },
+        {
+          "role": "agent",
+          "text": "Thank you for consenting. Who is this report for? Reply SELF if for you, or ANOTHER if for someone else.",
+          "timestamp": "2026-07-22T19:38:11.988Z"
+        },
+        {
+          "role": "patient",
+          "text": "another",
+          "timestamp": "2026-07-22T19:38:11.995Z",
+          "messageType": "text"
+        },
+        {
+          "role": "patient",
+          "text": "+2348011112222",
+          "timestamp": "2026-07-22T19:38:12.124Z",
+          "messageType": "text"
+        },
+        {
+          "role": "patient",
+          "text": "REL-000123",
+          "timestamp": "2026-07-22T19:38:12.248Z",
+          "messageType": "text"
+        },
+        {
+          "role": "patient",
+          "text": "12",
+          "timestamp": "2026-07-22T19:38:12.369Z",
+          "messageType": "text"
+        },
+        {
+          "role": "patient",
+          "text": "male",
+          "timestamp": "2026-07-22T19:38:12.445Z",
+          "messageType": "text"
+        }
+      ],
+      "createdAt": "2026-07-22T19:38:11.926Z",
+      "updatedAt": "2026-07-22T19:38:12.491Z",
+      "consentUpdatedAt": "2026-07-22T19:38:11.986Z",
+      "beneficiaryPhone": "+2348011112222",
+      "hmoNumber": "REL-000123",
+      "hmoProvider": "reliance",
+      "hmoVerification": {
+        "provider": "reliance",
+        "hmoNumber": "REL-000123",
+        "verified": false,
+        "verificationMode": "manual",
+        "status": "manual_verification_required"
+      },
+      "subjectAgeYears": 12,
+      "summaryCorrectionCount": 0
+    },
+    "+2348100001002": {
+      "phone": "+2348100001002",
+      "consentStatus": "accepted",
+      "coverageType": "none",
+      "beneficiaryMode": "self",
+      "subjectSex": "female",
+      "triageStage": "done",
+      "triageTurns": 0,
+      "history": [
+        {
+          "role": "patient",
+          "text": "yes",
+          "timestamp": "2026-07-22T19:38:12.652Z",
+          "messageType": "text"
+        },
+        {
+          "role": "agent",
+          "text": "Thank you. Your report has been sent to a doctor. You will receive the doctor's response in this WhatsApp chat.",
+          "timestamp": "2026-07-22T19:38:12.790Z"
+        }
+      ],
+      "createdAt": "2026-07-22T19:38:12.546Z",
+      "updatedAt": "2026-07-22T19:38:12.790Z",
+      "subjectAgeYears": 28,
+      "lastUrgencyBand": "urgent",
+      "triageSummaryDraft": "Fever and persistent vomiting since morning.",
+      "lastCaseId": "CASE-E2E-001"
+    },
+    "+2348100001003": {
+      "phone": "+2348100001003",
+      "consentStatus": "unknown",
+      "coverageType": "unknown",
+      "beneficiaryMode": "unknown",
+      "subjectSex": "unknown",
+      "triageStage": "done",
+      "triageTurns": 0,
+      "history": [
+        {
+          "role": "patient",
+          "text": "My mother has chest pain with sweating and cannot breathe",
+          "timestamp": "2026-07-22T19:38:12.801Z",
+          "messageType": "text"
+        },
+        {
+          "role": "agent",
+          "text": "This may be an emergency. Please go to the nearest emergency facility immediately or call local emergency services now. A doctor has been alerted.",
+          "timestamp": "2026-07-22T19:38:12.941Z"
+        }
+      ],
+      "createdAt": "2026-07-22T19:38:12.801Z",
+      "updatedAt": "2026-07-22T19:38:12.941Z",
+      "lastCaseId": "CASE-E2E-002",
+      "lastUrgencyBand": "emergency"
+    },
+    "+2348110009001": {
+      "phone": "+2348110009001",
+      "consentStatus": "accepted",
+      "coverageType": "none",
+      "beneficiaryMode": "self",
+      "subjectSex": "female",
+      "triageStage": "triage",
+      "triageTurns": 1,
+      "history": [
+        {
+          "role": "patient",
+          "text": "hello",
+          "timestamp": "2026-07-22T19:42:58.286Z",
+          "messageType": "text"
+        },
+        {
+          "role": "patient",
+          "text": "yes",
+          "timestamp": "2026-07-22T19:42:58.318Z",
+          "messageType": "text"
+        },
+        {
+          "role": "agent",
+          "text": "Thank you for consenting. Who is this report for? Reply SELF if for you, or ANOTHER if for someone else.",
+          "timestamp": "2026-07-22T19:42:58.415Z"
+        },
+        {
+          "role": "patient",
+          "text": "self",
+          "timestamp": "2026-07-22T19:42:58.461Z",
+          "messageType": "text"
+        },
+        {
+          "role": "patient",
+          "text": "none",
+          "timestamp": "2026-07-22T19:42:58.596Z",
+          "messageType": "text"
+        },
+        {
+          "role": "patient",
+          "text": "29",
+          "timestamp": "2026-07-22T19:42:58.719Z",
+          "messageType": "text"
+        },
+        {
+          "role": "patient",
+          "text": "female",
+          "timestamp": "2026-07-22T19:42:58.822Z",
+          "messageType": "text"
+        },
+        {
+          "role": "patient",
+          "text": "I have had fever and headache since yesterday",
+          "timestamp": "2026-07-22T19:42:58.872Z",
+          "messageType": "text"
+        },
+        {
+          "role": "agent",
+          "text": "Thank you. Could you tell me when this started and how severe it feels now?",
+          "timestamp": "2026-07-22T19:43:01.193Z"
+        }
+      ],
+      "createdAt": "2026-07-22T19:42:58.311Z",
+      "updatedAt": "2026-07-22T19:43:01.193Z",
+      "consentUpdatedAt": "2026-07-22T19:42:58.368Z",
+      "subjectAgeYears": 29,
+      "summaryCorrectionCount": 0
+    },
+    "+2349038433047": {
+      "phone": "+2349038433047",
+      "consentStatus": "accepted",
+      "coverageType": "unknown",
+      "beneficiaryMode": "unknown",
+      "subjectSex": "unknown",
+      "triageStage": "beneficiary_mode",
+      "triageTurns": 0,
+      "history": [
+        {
+          "role": "patient",
+          "text": "Hi",
+          "timestamp": "2026-07-22T20:18:48.078Z",
+          "mediaUrls": [],
+          "messageType": "text"
+        },
+        {
+          "role": "patient",
+          "text": "Yes",
+          "timestamp": "2026-07-22T20:25:21.383Z",
+          "mediaUrls": [],
+          "messageType": "text"
+        },
+        {
+          "role": "agent",
+          "text": "Thank you for consenting. Who is this report for? Reply SELF if for you, or ANOTHER if for someone else.",
+          "timestamp": "2026-07-22T20:25:21.412Z"
+        }
+      ],
+      "createdAt": "2026-07-22T20:18:48.078Z",
+      "updatedAt": "2026-07-22T20:25:21.413Z",
+      "consentUpdatedAt": "2026-07-22T20:25:21.410Z"
+    }
+  }
+}
