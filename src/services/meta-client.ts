@@ -14,9 +14,13 @@ function isWhatsAppMessageId(messageId: string | undefined): boolean {
   return typeof messageId === "string" && messageId.startsWith("wamid.");
 }
 
-function sleep(ms: number): Promise<void> {
-  return new Promise((resolve) => setTimeout(resolve, ms));
-}
+type PendingConsentButtons = {
+  to: string;
+  createdAt: number;
+};
+
+const pendingConsentButtonsByMessageId = new Map<string, PendingConsentButtons>();
+const PENDING_CONSENT_TTL_MS = 10 * 60 * 1000;
 
 function authHeaders(contentType = true): Record<string, string> {
   const headers: Record<string, string> = {
@@ -44,6 +48,25 @@ async function postMessages(payload: Record<string, unknown>): Promise<any> {
   }
 
   return data;
+}
+
+function cleanupPendingConsentButtons(nowMs: number): void {
+  for (const [messageId, entry] of pendingConsentButtonsByMessageId.entries()) {
+    if (nowMs - entry.createdAt > PENDING_CONSENT_TTL_MS) {
+      pendingConsentButtonsByMessageId.delete(messageId);
+    }
+  }
+}
+
+async function sendConsentButtons(to: string): Promise<void> {
+  await sendInteractiveButtons({
+    to,
+    body: "Please confirm your consent choice below.",
+    buttons: [
+      { id: "consent_accept", title: "Accept" },
+      { id: "consent_reject", title: "Reject" },
+    ],
+  });
 }
 
 export async function sendText(to: string, body: string): Promise<void> {
@@ -149,11 +172,9 @@ export async function sendConsentPrompt(to: string, contactName?: string): Promi
   const normalizedTo = normalizeWhatsAppPhone(to).replace(/^\+/, "");
   const templateName = config.meta.consentTemplateName || "tnc";
   const safeName = clampText(String(contactName || "there").trim() || "there", 60);
-  const consentChoiceBody = "Please confirm your consent choice below.";
-  const consentButtonsDelayMs = Math.max(1500, Number(config.meta.consentButtonsDelayMs || 3500));
 
   try {
-    await postMessages({
+    const data = await postMessages({
       messaging_product: "whatsapp",
       to: normalizedTo,
       type: "template",
@@ -171,28 +192,22 @@ export async function sendConsentPrompt(to: string, contactName?: string): Promi
       },
     });
 
-    // Template and interactive messages can be delivered out of order; delay helps keep template first in chat.
-    await sleep(consentButtonsDelayMs);
+    const templateMessageId = String(data?.messages?.[0]?.id || "");
+    if (isWhatsAppMessageId(templateMessageId)) {
+      cleanupPendingConsentButtons(Date.now());
+      pendingConsentButtonsByMessageId.set(templateMessageId, {
+        to: normalizedTo,
+        createdAt: Date.now(),
+      });
+      return;
+    }
 
-    await sendInteractiveButtons({
-      to: normalizedTo,
-      body: consentChoiceBody,
-      buttons: [
-        { id: "consent_accept", title: "Accept" },
-        { id: "consent_reject", title: "Reject" },
-      ],
-    });
+    logger.warn("Consent template send did not return a WhatsApp message id; sending buttons immediately.");
+    await sendConsentButtons(normalizedTo);
   } catch (error) {
     logger.warn("Consent template send failed, falling back to text", error);
     try {
-      await sendInteractiveButtons({
-        to: normalizedTo,
-        body: "Before we continue, please provide consent for NDPA-compliant triage processing.",
-        buttons: [
-          { id: "consent_accept", title: "Accept" },
-          { id: "consent_reject", title: "Reject" },
-        ],
-      });
+      await sendConsentButtons(normalizedTo);
     } catch (buttonError) {
       logger.warn("Consent interactive buttons failed, falling back to text", buttonError);
       await sendText(
@@ -201,6 +216,22 @@ export async function sendConsentPrompt(to: string, contactName?: string): Promi
       );
     }
   }
+}
+
+export async function sendPendingConsentButtonsForStatus(messageId: string, status?: string): Promise<boolean> {
+  cleanupPendingConsentButtons(Date.now());
+
+  const pending = pendingConsentButtonsByMessageId.get(messageId);
+  if (!pending) return false;
+
+  const normalizedStatus = String(status || "").toLowerCase();
+  if (normalizedStatus && !["sent", "delivered", "read"].includes(normalizedStatus)) {
+    return false;
+  }
+
+  pendingConsentButtonsByMessageId.delete(messageId);
+  await sendConsentButtons(pending.to);
+  return true;
 }
 
 export async function sendTypingIndicator(params: {

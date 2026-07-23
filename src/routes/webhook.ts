@@ -1,6 +1,14 @@
 import type { Request, Response } from "express";
 import { processInbound } from "../services/flow-engine.js";
-import { sendConsentPrompt, sendText, fetchMediaUrl, sendTypingIndicator, sendInteractiveButtons, sendInteractiveList } from "../services/meta-client.js";
+import {
+  sendConsentPrompt,
+  sendText,
+  fetchMediaUrl,
+  sendTypingIndicator,
+  sendInteractiveButtons,
+  sendInteractiveList,
+  sendPendingConsentButtonsForStatus,
+} from "../services/meta-client.js";
 import { normalizeWhatsAppPhone } from "../utils/phone.js";
 import { logger } from "../utils/logger.js";
 import { config } from "../config.js";
@@ -66,6 +74,24 @@ export async function metaWebhookHandler(req: Request, res: Response): Promise<v
       const changes = Array.isArray(entry?.changes) ? entry.changes : [];
       for (const change of changes) {
         const value = change?.value || {};
+        const statuses = Array.isArray(value?.statuses) ? value.statuses : [];
+
+        for (const statusEvent of statuses) {
+          const outboundMessageId = String(statusEvent?.id || "");
+          const deliveryStatus = String(statusEvent?.status || "");
+          if (!outboundMessageId) continue;
+
+          try {
+            await sendPendingConsentButtonsForStatus(outboundMessageId, deliveryStatus);
+          } catch (error) {
+            logger.warn("Failed to send pending consent buttons after status callback", {
+              outboundMessageId,
+              deliveryStatus,
+              error,
+            });
+          }
+        }
+
         const messages = Array.isArray(value?.messages) ? value.messages : [];
         const phoneNumberId = String(value?.metadata?.phone_number_id || "");
 
