@@ -178,6 +178,35 @@ function parseAiOptionsTag(text: string): {
   }
 }
 
+function ensureActionableQuestion(reply: string, hasOptions: boolean): string {
+  const text = clean(reply);
+  if (!text) {
+    return "Can you describe when this started and how severe it feels now?";
+  }
+
+  if (hasOptions) {
+    if (/\?/.test(text)) return text;
+    return `${text} Please choose one option below.`;
+  }
+
+  if (/\?/.test(text)) return text;
+
+  const low = toLower(text);
+  const nonActionablePatterns = [
+    /^ok(ay)?\.?$/,
+    /^thanks?\.?$/,
+    /^understood\.?$/,
+    /^we('| a)?re trying to understand/i,
+    /^noted\.?$/,
+  ];
+
+  if (nonActionablePatterns.some((pattern) => pattern.test(low))) {
+    return "Can you tell me if you have any other symptoms such as fever, nausea, or vomiting?";
+  }
+
+  return `${text} Could you tell me more about when this started and how severe it is now?`;
+}
+
 function buildClinicalHistory(state: PatientState): Array<{ role: "system" | "user" | "assistant"; content: string }> {
   const nonClinicalPatterns = [
     /consent/i,
@@ -272,8 +301,9 @@ async function startAiTriageQuestion(state: PatientState, threadId: string): Pro
   const aiResult = await runTriageAgent(buildClinicalHistory(seededState), threadId).catch(() => null);
   const rawReply = aiResult?.nextMessage || "Thank you. Please describe the main symptoms and when they started.";
   const parsed = parseAiOptionsTag(rawReply);
+  const safeReply = ensureActionableQuestion(parsed.reply, Boolean(parsed.options?.length));
   return {
-    reply: parsed.reply,
+    reply: safeReply,
     ...(parsed.options?.length ? { choiceOptions: parsed.options } : {}),
   };
 }
@@ -628,9 +658,10 @@ export async function processInbound(message: InboundMessage): Promise<ProcessIn
 
   const followUpRaw = aiResult.nextMessage || "Thank you. Could you tell me more about the symptom severity and when it started?";
   const followUp = parseAiOptionsTag(followUpRaw);
-  stateStore.appendTurn(message.patientPhone, { role: "agent", text: followUp.reply, timestamp: nowIso() });
+  const safeFollowUp = ensureActionableQuestion(followUp.reply, Boolean(followUp.options?.length));
+  stateStore.appendTurn(message.patientPhone, { role: "agent", text: safeFollowUp, timestamp: nowIso() });
   return {
-    reply: followUp.reply,
+    reply: safeFollowUp,
     ...(followUp.options?.length ? { choiceOptions: followUp.options } : {}),
   };
 }
