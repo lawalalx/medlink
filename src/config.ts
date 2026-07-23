@@ -28,6 +28,7 @@ export const config = {
     validateSignature: boolEnv(process.env.WHATSAPP_VALIDATE_SIGNATURE, false),
     consentTemplateName: process.env.WHATSAPP_CONSENT_TEMPLATE_NAME || "tnc",
     templateLanguageCode: process.env.WHATSAPP_TEMPLATE_LANGUAGE_CODE || "en",
+    consentButtonsDelayMs: numEnv(process.env.WHATSAPP_CONSENT_BUTTON_DELAY_MS, 3500),
   },
 
   openai: {

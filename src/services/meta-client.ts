@@ -150,7 +150,7 @@ export async function sendConsentPrompt(to: string, contactName?: string): Promi
   const templateName = config.meta.consentTemplateName || "tnc";
   const safeName = clampText(String(contactName || "there").trim() || "there", 60);
   const consentChoiceBody = "Please confirm your consent choice below.";
-  const consentButtonsDelayMs = 1200;
+  const consentButtonsDelayMs = Math.max(1500, Number(config.meta.consentButtonsDelayMs || 3500));
 
   try {
     await postMessages({
@@ -171,7 +171,7 @@ export async function sendConsentPrompt(to: string, contactName?: string): Promi
       },
     });
 
-    // Template and interactive messages can be delivered out of order; brief delay helps keep template first.
+    // Template and interactive messages can be delivered out of order; delay helps keep template first in chat.
     await sleep(consentButtonsDelayMs);
 
     await sendInteractiveButtons({
