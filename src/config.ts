@@ -26,6 +26,8 @@ export const config = {
     callbackUrl: process.env.WHATSAPP_CALLBACK_URL || "",
     appSecret: process.env.WHATSAPP_APP_SECRET || "",
     validateSignature: boolEnv(process.env.WHATSAPP_VALIDATE_SIGNATURE, false),
+    consentTemplateName: process.env.WHATSAPP_CONSENT_TEMPLATE_NAME || "tnc",
+    templateLanguageCode: process.env.WHATSAPP_TEMPLATE_LANGUAGE_CODE || "en",
   },
 
   openai: {

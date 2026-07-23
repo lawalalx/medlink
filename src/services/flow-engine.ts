@@ -67,7 +67,7 @@ function coverageCaseLabel(state: PatientState): "case_1_hmo" | "case_2_hospital
 function buildSummaryText(summary: string): string {
   const value = clean(summary);
   if (!value) {
-    return "Thanks. I have captured your symptoms and key details for doctor review.";
+    return "Here is a summary of what I captured:\n- Your symptom details from this chat\n\nReply YES to confirm this summary, or NO to correct it.";
   }
 
   return `Here is a summary of what I captured:\n${value}\n\nReply YES to confirm this summary, or NO to correct it.`;
@@ -233,6 +233,8 @@ export async function processInbound(message: InboundMessage): Promise<ProcessIn
   if (GREETING_SET.has(lowerText) && state.consentStatus === "accepted") {
     state = stateStore.updatePatient(message.patientPhone, (s) => ({
       ...s,
+      consentStatus: "unknown",
+      consentUpdatedAt: undefined,
       beneficiaryMode: "unknown",
       beneficiaryPhone: undefined,
       coverageType: "unknown",
@@ -242,20 +244,17 @@ export async function processInbound(message: InboundMessage): Promise<ProcessIn
       hmoVerification: undefined,
       subjectAgeYears: undefined,
       subjectSex: "unknown",
-      triageStage: "beneficiary_mode",
+      triageStage: "consent",
       triageTurns: 0,
       triageSummaryDraft: undefined,
       summaryCorrectionCount: 0,
     }));
 
-    const reply = "Welcome back. Who is this report for? Reply SELF if for you, or ANOTHER if for someone else.";
+    const reply = "Welcome back. Before we continue, please provide consent for triage data processing. Reply YES to accept or NO to decline.";
     stateStore.appendTurn(message.patientPhone, { role: "agent", text: reply, timestamp: nowIso() });
     return {
       reply,
-      buttonOptions: [
-        { id: "beneficiary_self", title: "SELF" },
-        { id: "beneficiary_another", title: "ANOTHER" },
-      ],
+      sendConsentTemplate: true,
     };
   }
 

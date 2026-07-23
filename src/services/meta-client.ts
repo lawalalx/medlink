@@ -141,53 +141,57 @@ export async function sendInteractiveList(params: {
   });
 }
 
-export async function sendConsentPrompt(to: string): Promise<void> {
+export async function sendConsentPrompt(to: string, contactName?: string): Promise<void> {
   const normalizedTo = normalizeWhatsAppPhone(to).replace(/^\+/, "");
-  const consentBody =
-    "Before we continue, please consent to NDPA-compliant processing of your health information for triage and doctor review.";
-  const consentFooter = "No diagnosis. A licensed doctor will review your case.";
+  const templateName = config.meta.consentTemplateName || "tnc";
+  const safeName = clampText(String(contactName || "there").trim() || "there", 60);
+  const consentChoiceBody = "Please confirm your consent choice below.";
 
   try {
     await postMessages({
       messaging_product: "whatsapp",
       to: normalizedTo,
-      type: "interactive",
-      interactive: {
-        type: "button",
-        body: {
-          // WhatsApp interactive body max length is 1024 characters.
-          text: clampText(consentBody, 1024),
+      type: "template",
+      template: {
+        name: templateName,
+        language: {
+          code: config.meta.templateLanguageCode || "en",
         },
-        footer: {
-          // WhatsApp interactive footer max length is 60 characters.
-          text: clampText(consentFooter, 60),
-        },
-        action: {
-          buttons: [
-            {
-              type: "reply",
-              reply: {
-                id: "consent_accept",
-                title: "Accept",
-              },
-            },
-            {
-              type: "reply",
-              reply: {
-                id: "consent_reject",
-                title: "Reject",
-              },
-            },
-          ],
-        },
+        components: [
+          {
+            type: "body",
+            parameters: [{ type: "text", text: safeName }],
+          },
+        ],
       },
     });
+
+    await sendInteractiveButtons({
+      to: normalizedTo,
+      body: consentChoiceBody,
+      buttons: [
+        { id: "consent_accept", title: "Accept" },
+        { id: "consent_reject", title: "Reject" },
+      ],
+    });
   } catch (error) {
-    logger.warn("Interactive consent prompt failed, falling back to text", error);
-    await sendText(
-      normalizedTo,
-      "Before we continue, please provide consent for NDPA-compliant triage processing. Reply YES to accept or NO to decline."
-    );
+    logger.warn("Consent template send failed, falling back to text", error);
+    try {
+      await sendInteractiveButtons({
+        to: normalizedTo,
+        body: "Before we continue, please provide consent for NDPA-compliant triage processing.",
+        buttons: [
+          { id: "consent_accept", title: "Accept" },
+          { id: "consent_reject", title: "Reject" },
+        ],
+      });
+    } catch (buttonError) {
+      logger.warn("Consent interactive buttons failed, falling back to text", buttonError);
+      await sendText(
+        normalizedTo,
+        "Before we continue, please provide consent for NDPA-compliant triage processing. Reply YES to accept or NO to decline."
+      );
+    }
   }
 }
 

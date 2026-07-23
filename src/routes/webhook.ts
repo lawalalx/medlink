@@ -43,6 +43,21 @@ function pickInboundText(message: any): string {
   return String(text || interactiveTitle || interactiveId || "").trim();
 }
 
+function pickContactProfileName(value: any, from: string): string {
+  const contacts = Array.isArray(value?.contacts) ? value.contacts : [];
+  const fallbackContact = contacts[0];
+  const matchedContact = contacts.find((contact: any) => {
+    const waId = normalizeWhatsAppPhone(String(contact?.wa_id || ""));
+    return !!waId && waId === from;
+  });
+
+  const profileName =
+    String(matchedContact?.profile?.name || "") ||
+    String(fallbackContact?.profile?.name || "");
+
+  return profileName.trim();
+}
+
 export async function metaWebhookHandler(req: Request, res: Response): Promise<void> {
   try {
     const entries = Array.isArray(req.body?.entry) ? req.body.entry : [];
@@ -57,6 +72,8 @@ export async function metaWebhookHandler(req: Request, res: Response): Promise<v
         for (const message of messages) {
           const from = normalizeWhatsAppPhone(String(message?.from || ""));
           if (!from) continue;
+
+          const contactName = pickContactProfileName(value, from);
 
           const body = pickInboundText(message);
           const messageId = String(message?.id || "");
@@ -120,7 +137,7 @@ export async function metaWebhookHandler(req: Request, res: Response): Promise<v
             });
 
             if (result.sendConsentTemplate) {
-              await sendConsentPrompt(from);
+              await sendConsentPrompt(from, contactName || undefined);
             } else if (result.buttonOptions?.length) {
               await sendInteractiveButtons({
                 to: from,
