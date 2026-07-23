@@ -14,6 +14,10 @@ function isWhatsAppMessageId(messageId: string | undefined): boolean {
   return typeof messageId === "string" && messageId.startsWith("wamid.");
 }
 
+function sleep(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
 function authHeaders(contentType = true): Record<string, string> {
   const headers: Record<string, string> = {
     Authorization: `Bearer ${config.meta.accessToken}`,
@@ -146,6 +150,7 @@ export async function sendConsentPrompt(to: string, contactName?: string): Promi
   const templateName = config.meta.consentTemplateName || "tnc";
   const safeName = clampText(String(contactName || "there").trim() || "there", 60);
   const consentChoiceBody = "Please confirm your consent choice below.";
+  const consentButtonsDelayMs = 1200;
 
   try {
     await postMessages({
@@ -165,6 +170,9 @@ export async function sendConsentPrompt(to: string, contactName?: string): Promi
         ],
       },
     });
+
+    // Template and interactive messages can be delivered out of order; brief delay helps keep template first.
+    await sleep(consentButtonsDelayMs);
 
     await sendInteractiveButtons({
       to: normalizedTo,
