@@ -191,6 +191,13 @@ function nextStageAfterCoverage(state: PatientState): TriageStage {
   return "beneficiary_mode";
 }
 
+function firstComplaintPrompt(state: PatientState): string {
+  if (state.beneficiaryMode === "another") {
+    return "Thanks. Please describe the patient's main complaint and when it started.";
+  }
+  return "Thanks. Please describe your main complaint and when it started.";
+}
+
 async function startAiTriageQuestion(state: PatientState, threadId: string): Promise<ProcessInboundResult> {
   const seededState = stateStore.updatePatient(state.phone, (s) => ({
     ...s,
@@ -399,9 +406,9 @@ export async function processInbound(message: InboundMessage): Promise<ProcessIn
         hospitalCardNumber: undefined,
         triageStage: nextStageAfterCoverage(s),
       }));
-      const aiKickoff = await startAiTriageQuestion(state, message.patientPhone);
-      stateStore.appendTurn(message.patientPhone, { role: "agent", text: aiKickoff.reply, timestamp: nowIso() });
-      return aiKickoff;
+      const reply = firstComplaintPrompt(state);
+      stateStore.appendTurn(message.patientPhone, { role: "agent", text: reply, timestamp: nowIso() });
+      return { reply };
     }
 
     const isHospitalCard = /^card[:\s-]/i.test(value) || /^hc[:\s-]/i.test(value);
@@ -417,9 +424,9 @@ export async function processInbound(message: InboundMessage): Promise<ProcessIn
         triageStage: nextStageAfterCoverage(s),
       }));
       const refreshed = stateStore.getPatient(message.patientPhone);
-      const aiKickoff = await startAiTriageQuestion(refreshed, message.patientPhone);
-      stateStore.appendTurn(message.patientPhone, { role: "agent", text: aiKickoff.reply, timestamp: nowIso() });
-      return aiKickoff;
+      const reply = firstComplaintPrompt(refreshed);
+      stateStore.appendTurn(message.patientPhone, { role: "agent", text: reply, timestamp: nowIso() });
+      return { reply };
     }
 
     const verify = await verifyHmoNumber(value);
@@ -436,23 +443,15 @@ export async function processInbound(message: InboundMessage): Promise<ProcessIn
     if (verify.status === "verified") {
       const hmoName = verify.provider && verify.provider !== "unknown" ? verify.provider.toUpperCase() : "your HMO";
       const refreshed = stateStore.getPatient(message.patientPhone);
-      const aiKickoff = await startAiTriageQuestion(refreshed, message.patientPhone);
-      const reply = `HMO details received and verified with ${hmoName}. ${aiKickoff.reply}`;
+      const reply = `HMO details received and verified with ${hmoName}. ${firstComplaintPrompt(refreshed)}`;
       stateStore.appendTurn(message.patientPhone, { role: "agent", text: reply, timestamp: nowIso() });
-      return {
-        reply,
-        ...(aiKickoff.choiceOptions?.length ? { choiceOptions: aiKickoff.choiceOptions } : {}),
-      };
+      return { reply };
     }
 
     const refreshed = stateStore.getPatient(message.patientPhone);
-    const aiKickoff = await startAiTriageQuestion(refreshed, message.patientPhone);
-    const reply = `HMO details received. We could not auto-verify right now and will continue with manual verification. ${aiKickoff.reply}`;
+    const reply = `HMO details received. We could not auto-verify right now and will continue with manual verification. ${firstComplaintPrompt(refreshed)}`;
     stateStore.appendTurn(message.patientPhone, { role: "agent", text: reply, timestamp: nowIso() });
-    return {
-      reply,
-      ...(aiKickoff.choiceOptions?.length ? { choiceOptions: aiKickoff.choiceOptions } : {}),
-    };
+    return { reply };
   }
 
   if (state.triageStage === "subject_age") {
