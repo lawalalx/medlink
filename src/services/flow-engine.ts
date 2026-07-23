@@ -64,11 +64,76 @@ function coverageCaseLabel(state: PatientState): "case_1_hmo" | "case_2_hospital
   return "case_3_uninsured";
 }
 
-function buildSummaryText(summary: string): string {
-  const value = clean(summary);
-  if (!value) {
-    return "Here is a summary of what I captured:\n- Your symptom details from this chat\n\nReply YES to confirm this summary, or NO to correct it.";
+function normalizeForSummary(value: string): string {
+  return clean(value).replace(/\s+/g, " ");
+}
+
+function buildFallbackSummary(state: PatientState): string {
+  const skipTokens = new Set([
+    "yes",
+    "no",
+    "y",
+    "n",
+    "accept",
+    "reject",
+    "consent_accept",
+    "consent_reject",
+    "self",
+    "another",
+    "none",
+    "male",
+    "female",
+  ]);
+
+  const nonClinicalPatterns = [
+    /consent/i,
+    /hmo|hospital card|coverage|verified/i,
+    /reply self|reply another|who is this report for/i,
+    /phone number/i,
+    /age in years/i,
+    /sex of the patient/i,
+  ];
+
+  const details = state.history
+    .filter((turn) => turn.role === "patient")
+    .map((turn) => normalizeForSummary(turn.text))
+    .filter((text) => {
+      if (!text || text === "[media message]") return false;
+      if (skipTokens.has(toLower(text))) return false;
+      if (isPhoneLike(text)) return false;
+      return !nonClinicalPatterns.some((pattern) => pattern.test(text));
+    })
+    .slice(-6);
+
+  const lines: string[] = [];
+  const beneficiaryLabel =
+    state.beneficiaryMode === "another"
+      ? "another person"
+      : state.beneficiaryMode === "self"
+      ? "self"
+      : "not specified";
+  lines.push(`- Beneficiary: ${beneficiaryLabel}`);
+
+  if (typeof state.subjectAgeYears === "number" || state.subjectSex !== "unknown") {
+    const ageText = typeof state.subjectAgeYears === "number" ? String(state.subjectAgeYears) : "not provided";
+    const sexText = state.subjectSex !== "unknown" ? state.subjectSex : "not provided";
+    lines.push(`- Demographics: age ${ageText}, sex ${sexText}`);
   }
+
+  if (details.length) {
+    lines.push("- Reported symptoms/details:");
+    for (const detail of details) {
+      lines.push(`  - ${detail}`);
+    }
+  } else {
+    lines.push("- Reported symptoms/details: captured from this chat.");
+  }
+
+  return lines.join("\n");
+}
+
+function buildSummaryText(summary: string, state: PatientState): string {
+  const value = clean(summary) || buildFallbackSummary(state);
 
   return `Here is a summary of what I captured:\n${value}\n\nReply YES to confirm this summary, or NO to correct it.`;
 }
@@ -548,14 +613,15 @@ export async function processInbound(message: InboundMessage): Promise<ProcessIn
 
   if (aiResult.status === "complete" || activeState.triageTurns >= 6) {
     const urgency = aiResult.suggestedUrgencyBand || inferUrgencyFromText(normalizedText);
+    const summaryDraft = clean(aiResult.patientSummary) || buildFallbackSummary(activeState);
     stateStore.updatePatient(message.patientPhone, (s) => ({
       ...s,
       triageStage: "summary_confirm",
-      triageSummaryDraft: clean(aiResult.patientSummary),
+      triageSummaryDraft: summaryDraft,
       lastUrgencyBand: urgency,
     }));
 
-    const completeReply = buildSummaryText(aiResult.patientSummary);
+    const completeReply = buildSummaryText(summaryDraft, activeState);
     stateStore.appendTurn(message.patientPhone, { role: "agent", text: completeReply, timestamp: nowIso() });
     return { reply: completeReply };
   }
